@@ -34,10 +34,14 @@ const TOKEN = "YOUR BV PLAYBACK TOKEN";
 
 startPlaybackSession({
   token: TOKEN,
-}).then((session) => {
-  // Use the session object to configure the player and load content
-  console.log("Session started:", session);
-});
+})
+  .then((session) => {
+    // Use the session object to configure the player and load content
+    console.log("Session started:", session);
+  })
+  .catch((error) => {
+    console.error("Session start failed:", error);
+  });
 ```
 
 This function returns a Promise that resolves with a session object containing information about the content and playback sources.
@@ -54,7 +58,7 @@ function endPlaybackSession() {
       console.log("Session ended successfully");
     })
     .catch((error) => {
-      console.error("Error ending session:", error);
+      console.error("Session ended failed:", error);
     });
 }
 ```
@@ -93,7 +97,7 @@ const config = {
     ["analytics.resource_type"]: session.content.type,
   },
 };
-player = await BlendVision.createPlayer("my-player", config);
+player = BlendVision.createPlayer("my-player", config);
 ```
 
 - **`token`**: The playback token that authenticates the session.
@@ -111,6 +115,7 @@ Ensure that the player has a container in your HTML:
   ...rest code
   <body>
     <div id="my-player"></div>
+    <button id="exitButton">Exit Player</button>
     <script type="module">
       import "https://unpkg.com/@blendvision/link@version";
       import "https://unpkg.com/@blendvision/player@version";
@@ -136,6 +141,13 @@ Ensure that the player has a container in your HTML:
               ["analytics.resource_type"]: session.content.type,
             },
             source: session.sources,
+            onPlaylogFired: (event) => {
+              // Handle playback_video_ended event, ex: live ended
+              if (event === "playback_video_ended") {
+                console.log("Video playback ended, ending session...");
+                playbackSession.end();
+              }
+            },
           });
 
           console.info("Playback", player);
@@ -144,6 +156,29 @@ Ensure that the player has a container in your HTML:
         .catch((error) =>
           console.error("Playback session failed error", error)
         );
+
+      // Cleanup function
+      function onExit() {
+        if (player) {
+          player.unload();
+        }
+        if (playbackSession) {
+          playbackSession
+            .end()
+            .then(() => console.log("Session ended successfully"))
+            .catch((error) => console.error("Failed to end session:", error));
+        }
+      }
+
+      // Add event listener for beforeunload
+      window.addEventListener("beforeunload", onExit);
+
+      // Add event listener for UI exit button
+      document.getElementById("exitButton").addEventListener("click", () => {
+        onExit();
+        console.log("Player exited via UI");
+        // Additional UI updates or redirects can be added here
+      });
     </script>
   </body>
 </html>
