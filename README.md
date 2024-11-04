@@ -21,9 +21,7 @@ To include the necessary libraries via npm, run:
 npm install @blendvision/link @blendvision/player
 ```
 
-### Session Management
-
-#### Starting a Session
+## `startPlaybackSession`
 
 The `startPlaybackSession` function is used to initiate a playback session, and this sends a heartbeat to increase concurrent viewers:
 
@@ -135,7 +133,7 @@ Ensure that the player has a container in your HTML:
           playbackSession = session;
 
           player = await BlendVision.createPlayer("my-player", {
-            license: LICENSE_KEY,
+            licenseKey: LICENSE_KEY,
             modulesConfig: {
               ["analytics.resource_id"]: session.content.id,
               ["analytics.resource_type"]: session.content.type,
@@ -184,6 +182,106 @@ Ensure that the player has a container in your HTML:
 </html>
 ```
 
-### License
+## `createPlayer`
 
-This project uses the [BlendVision SDK](https://blendvision.com), and you should have proper licenses and tokens to use their services.
+### Overview
+
+The `createPlayer` function initializes a new instance of the BlendVision player, providing control over playback settings, event handling, and custom configurations through `BlendVisionLinkSDK`. It accepts a configuration object that allows for session authentication, license management, and event logging.
+
+### Usage
+
+Here’s a basic setup to create a player instance with `BlendVisionLinkSDK.createPlayer`, using essential configuration properties:
+
+```javascript
+<script type="module">
+  import "https://unpkg.com/@blendvision/link@version";
+
+  const TOKEN = 'YOUR_BV_PLAYBACK_TOKEN';
+  const LICENSE_KEY = 'YOUR_BV_PLAYER_LICENSE_KEY';
+
+  const config = {
+    licenseKey: LICENSE_KEY,
+    onPlaylogFired: (event, data) => {
+      console.info("Playback event:", event, data);
+    },
+  };
+
+  let player;
+  player = await BlendVisionLinkSDK.createPlayer({
+    playbackSession: {
+      token: TOKEN,
+    },
+    playerOptions: {
+      id: "my-player",
+      config,
+    },
+  });
+</script>
+```
+
+### Parameters
+
+- **playbackSession**: Contains session-specific data like `token` for authenticating the playback session.
+
+  - `token`: A playback token provided by BlendVision for secure access.
+
+- **playerOptions**: Defines the options for the player instance.
+  - `id`: The HTML element ID for the player container.
+  - `config`: Configuration options, including `licenseKey` and event handlers.
+
+### Usage Example
+
+The following example demonstrates how to create a player instance using `BlendVisionLinkSDK.createPlayer`, and then shows basic playback controls like `play()` and `pause()`.
+
+```html
+<script type="module">
+  ...rest code
+
+    let player;
+      player = await BlendVisionLinkSDK.createPlayer({
+        playbackSession: {
+          token: TOKEN,
+        },
+        playerOptions: {
+          id: "my-player",
+          config,
+        },
+      });
+
+
+      // Example of basic playback controls
+      document.getElementById("playButton").addEventListener("click", () => {
+        player.play();
+      });
+
+      document.getElementById("pauseButton").addEventListener("click", () => {
+        player.pause();
+      });
+
+      // Stop the current video playback and free up resources related to the player.
+      document.getElementById("releaseButton").addEventListener("click", () => {
+        player.unload();
+      });
+      // Reload the same or updated content after a reset or release.
+      document.getElementById("reloadButton").addEventListener("click", () => {
+        player.load({ id: "my-player", token: TOKEN });
+      });
+
+      // Add event listeners for playback events or use onPlaylogFired callback in config.
+      player.addEventListener("play", () => {
+        console.log("video is playing");
+      });
+
+      player.addEventListener("pause", () => {
+        console.log("video is paused");
+      });
+
+      player.addEventListener("ended", () => {
+        console.log("video is ended");
+      });
+</script>
+```
+
+### License This project uses the [BlendVision SDK](https://blendvision.com),
+
+and you should have proper licenses and tokens to use their services.
